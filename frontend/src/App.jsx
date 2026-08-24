@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PatientCompleteProfile from "./pages/PatientCompleteProfile";
+import PatientNameSearch from "./components/PatientNameSearch";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";

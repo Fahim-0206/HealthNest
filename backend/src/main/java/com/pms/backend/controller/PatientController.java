@@ -47,6 +47,11 @@ public class PatientController {
         return ResponseEntity.ok(patientService.getProfileByHealthId(healthId));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<PatientProfileResponse>> search(@RequestParam String name) {
+        return ResponseEntity.ok(patientService.searchByName(name));
+    }
+
     @GetMapping("/me/prescriptions")
     public ResponseEntity<List<PrescriptionResponse>> myPrescriptions(@AuthenticationPrincipal CustomUserDetails principal) {
         String healthId = patientService.getProfileByUserId(principal.getUser().getId()).getHealthId();

@@ -4,6 +4,9 @@ import { useToast } from "../../context/ToastContext";
 
 export default function AdminDoctors() {
   const [doctors, setDoctors] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [search, setSearch] = useState("");
+  const [deptFilter, setDeptFilter] = useState("ALL");
   const [docName, setDocName] = useState("");
   const [docEmail, setDocEmail] = useState("");
   const [newCreds, setNewCreds] = useState(null);
@@ -11,6 +14,7 @@ export default function AdminDoctors() {
 
   const load = () => {
     axiosClient.get("/doctor/directory").then((r) => setDoctors(r.data));
+    axiosClient.get("/departments").then((r) => setDepartments(r.data));
   };
 
   useEffect(load, []);
@@ -50,6 +54,13 @@ export default function AdminDoctors() {
     }
   };
 
+  const filtered = doctors.filter((d) => {
+    const matchesDept = deptFilter === "ALL" || d.departmentName === deptFilter;
+    const q = search.toLowerCase();
+    const matchesSearch = d.fullName.toLowerCase().includes(q) || d.email.toLowerCase().includes(q) || (d.specialization || "").toLowerCase().includes(q);
+    return matchesDept && matchesSearch;
+  });
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-800 mb-1">Manage Doctors</h1>
@@ -85,6 +96,23 @@ export default function AdminDoctors() {
         </form>
       </div>
 
+      <div className="flex gap-2 mb-4 flex-wrap">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name, email, or specialization..."
+          className="flex-1 min-w-[220px] border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+        />
+        <select
+          value={deptFilter}
+          onChange={(e) => setDeptFilter(e.target.value)}
+          className="border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+        >
+          <option value="ALL">All departments</option>
+          {departments.map((d) => <option key={d.id} value={d.name}>{d.name}</option>)}
+        </select>
+      </div>
+
       <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
@@ -98,7 +126,7 @@ export default function AdminDoctors() {
             </tr>
           </thead>
           <tbody>
-            {doctors.map((d) => (
+            {filtered.map((d) => (
               <tr key={d.userId} className="border-t">
                 <td className="px-4 py-3 font-medium text-gray-800">Dr. {d.fullName}</td>
                 <td className="px-4 py-3 text-gray-600">{d.email}</td>
@@ -112,8 +140,8 @@ export default function AdminDoctors() {
                 </td>
               </tr>
             ))}
-            {doctors.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-6 text-center text-gray-400">No doctors with completed profiles yet.</td></tr>
+            {filtered.length === 0 && (
+              <tr><td colSpan={6} className="px-4 py-6 text-center text-gray-400">No doctors match your search.</td></tr>
             )}
           </tbody>
         </table>

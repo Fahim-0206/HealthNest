@@ -64,7 +64,12 @@ public class AdminController {
     }
 
     @GetMapping("/lab-technicians")
-    public ResponseEntity<List<UserSummaryResponse>> getLabTechnicians() {
-        return ResponseEntity.ok(labService.getAllLabTechnicians());
+    public ResponseEntity<List<LabProfileResponse>> getLabTechnicians() {
+        return ResponseEntity.ok(labService.getAllLabTechnicianProfiles());
+    }
+
+    @PostMapping("/lab-technicians/{userId}/reset-password")
+    public ResponseEntity<CreateDoctorResponse> resetLabPassword(@PathVariable Long userId) {
+        return ResponseEntity.ok(labService.resetPassword(userId));
     }
 }

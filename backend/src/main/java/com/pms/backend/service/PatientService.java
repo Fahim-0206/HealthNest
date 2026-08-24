@@ -95,4 +95,8 @@ public class PatientService {
                 p.getVerificationStatus()
         );
     }
+    public List<PatientProfileResponse> searchByName(String name) {
+        return patientRepository.findByUser_FullNameContainingIgnoreCase(name).stream()
+                .map(this::toResponse).toList();
+    }
 }

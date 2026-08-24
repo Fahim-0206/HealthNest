@@ -4,6 +4,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import axiosClient from "../../api/axiosClient";
 import { useToast } from "../../context/ToastContext";
 import PrescriptionPager from "../../components/PrescriptionPager";
+import PatientNameSearch from "../../components/PatientNameSearch";
 
 export default function DoctorPatients() {
   const [searchParams] = useSearchParams();
@@ -117,27 +118,29 @@ export default function DoctorPatients() {
       <p className="text-gray-500 text-sm mb-6">Search by Health ID or scan a patient's QR code.</p>
 
       <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
-        <form onSubmit={handleManualLookup} className="flex gap-2 mb-3">
-          <input
-            value={healthId}
-            onChange={(e) => setHealthId(e.target.value)}
-            placeholder="Enter Health ID"
-            className="flex-1 border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-          />
-          <button className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-md">Search</button>
-        </form>
+  <form onSubmit={handleManualLookup} className="flex gap-2 mb-3">
+    <input
+      value={healthId}
+      onChange={(e) => setHealthId(e.target.value)}
+      placeholder="Enter Health ID"
+      className="flex-1 border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+    />
+    <button className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-md">Search</button>
+  </form>
 
-        {!scanning ? (
-          <button onClick={startScan} className="text-sm text-teal-700 underline">
-            Or scan QR code with camera
-          </button>
-        ) : (
-          <div>
-            <div id="qr-reader" className="w-full max-w-sm mx-auto" />
-            <button onClick={stopScan} className="text-sm text-red-600 underline mt-2">Cancel scan</button>
-          </div>
-        )}
-      </div>
+  {!scanning ? (
+    <button onClick={startScan} className="text-sm text-teal-700 underline mb-3 block">
+      Or scan QR code with camera
+    </button>
+  ) : (
+    <div className="mb-3">
+      <div id="qr-reader" className="w-full max-w-sm mx-auto" />
+      <button onClick={stopScan} className="text-sm text-red-600 underline mt-2">Cancel scan</button>
+    </div>
+  )}
+
+  <PatientNameSearch onSelect={(hid) => { setHealthId(hid); lookupPatient(hid); }} />
+</div>
 
       {patient && (
         <>

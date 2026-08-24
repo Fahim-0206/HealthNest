@@ -1,26 +1,62 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { Html5Qrcode } from "html5-qrcode";
 import axiosClient from "../../api/axiosClient";
 import { useToast } from "../../context/ToastContext";
+import PatientNameSearch from "../../components/PatientNameSearch";
 
 export default function LabPatientLookup() {
   const [healthId, setHealthId] = useState("");
   const [patient, setPatient] = useState(null);
   const [prescriptions, setPrescriptions] = useState([]);
   const [uploadingId, setUploadingId] = useState(null);
+  const [scanning, setScanning] = useState(false);
   const { showToast } = useToast();
+  const scannerRef = useRef(null);
 
-  const lookup = async (e) => {
-    e.preventDefault();
+  const lookup = async (id) => {
     try {
-      const pRes = await axiosClient.get(`/patient/lookup/${healthId}`);
+      const pRes = await axiosClient.get(`/patient/lookup/${id}`);
       setPatient(pRes.data);
-      const rxRes = await axiosClient.get(`/prescriptions/patient/${healthId}`);
+      const rxRes = await axiosClient.get(`/prescriptions/patient/${id}`);
       setPrescriptions(rxRes.data);
     } catch {
       showToast("No patient found with this Health ID", "error");
       setPatient(null);
       setPrescriptions([]);
     }
+  };
+
+  const handleManualLookup = (e) => {
+    e.preventDefault();
+    if (healthId) lookup(healthId);
+  };
+
+  const startScan = async () => {
+    setScanning(true);
+    setTimeout(async () => {
+      const scanner = new Html5Qrcode("qr-reader");
+      scannerRef.current = scanner;
+      try {
+        await scanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: 250 },
+          async (decodedText) => {
+            await scanner.stop();
+            setScanning(false);
+            setHealthId(decodedText);
+            lookup(decodedText);
+          }
+        );
+      } catch {
+        showToast("Camera access failed. Enter Health ID manually instead.", "error");
+        setScanning(false);
+      }
+    }, 200);
+  };
+
+  const stopScan = async () => {
+    if (scannerRef.current) { try { await scannerRef.current.stop(); } catch {} }
+    setScanning(false);
   };
 
   const handleFileUpload = async (prescriptionId, file) => {
@@ -53,18 +89,33 @@ export default function LabPatientLookup() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-800 mb-1">Patient Lookup</h1>
-      <p className="text-gray-500 text-sm mb-6">Search a patient's Health ID to attach lab reports to their prescriptions.</p>
+      <p className="text-gray-500 text-sm mb-6">Search a patient to attach lab reports to their prescriptions.</p>
 
-      <form onSubmit={lookup} className="bg-white rounded-xl shadow-sm border p-6 mb-6 flex gap-2">
-        <input
-          required
-          value={healthId}
-          onChange={(e) => setHealthId(e.target.value)}
-          placeholder="Enter Health ID"
-          className="flex-1 border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-        />
-        <button className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-md">Search</button>
-      </form>
+      <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
+        <form onSubmit={handleManualLookup} className="flex gap-2 mb-3">
+          <input
+            required
+            value={healthId}
+            onChange={(e) => setHealthId(e.target.value)}
+            placeholder="Enter Health ID"
+            className="flex-1 border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+          <button className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-md">Search</button>
+        </form>
+
+        {!scanning ? (
+          <button onClick={startScan} className="text-sm text-teal-700 underline mb-3 block">
+            Or scan QR code with camera
+          </button>
+        ) : (
+          <div className="mb-3">
+            <div id="qr-reader" className="w-full max-w-sm mx-auto" />
+            <button onClick={stopScan} className="text-sm text-red-600 underline mt-2">Cancel scan</button>
+          </div>
+        )}
+
+        <PatientNameSearch onSelect={(hid) => { setHealthId(hid); lookup(hid); }} />
+      </div>
 
       {patient && (
         <>

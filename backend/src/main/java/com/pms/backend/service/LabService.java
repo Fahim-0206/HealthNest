@@ -46,10 +46,27 @@ public class LabService {
         return new CreateDoctorResponse(savedUser.getId(), savedUser.getEmail(), tempPassword);
     }
 
-    public List<UserSummaryResponse> getAllLabTechnicians() {
+    public CreateDoctorResponse resetPassword(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Lab technician not found"));
+        String tempPassword = "Lab" + UUID.randomUUID().toString().substring(0, 8);
+        user.setPassword(passwordEncoder.encode(tempPassword));
+        userRepository.save(user);
+        return new CreateDoctorResponse(user.getId(), user.getEmail(), tempPassword);
+    }
+
+    public List<LabProfileResponse> getAllLabTechnicianProfiles() {
         return userRepository.findAll().stream()
                 .filter(u -> u.getRole() == Role.LAB)
-                .map(u -> new UserSummaryResponse(u.getId(), u.getFullName(), u.getEmail(), u.getRole().name(), u.isEnabled()))
+                .map(u -> {
+                    LabProfile p = labProfileRepository.findByUserId(u.getId()).orElse(null);
+                    return new LabProfileResponse(
+                            u.getId(), u.getFullName(), u.getEmail(),
+                            p != null ? p.getPhone() : null,
+                            p != null ? p.getLocation() : null,
+                            p != null && p.isProfileCompleted()
+                    );
+                })
                 .toList();
     }
 

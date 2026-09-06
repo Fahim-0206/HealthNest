@@ -48,28 +48,27 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/departments/**").authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/departments/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/departments/**").hasRole("ADMIN")
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/doctor/**").hasAnyRole("DOCTOR", "ADMIN")
-                .requestMatchers("/api/lab/**").hasAnyRole("LAB", "ADMIN")
-                .requestMatchers("/api/files/**").authenticated()
-                .requestMatchers("/api/patient/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN", "LAB")
-                .requestMatchers(HttpMethod.GET, "/api/appointments/today").hasRole("ADMIN")
-                .requestMatchers("/api/appointments/**").authenticated()
-                .requestMatchers("/api/prescriptions/**").authenticated()
-                .requestMatchers("/api/notifications/**").authenticated()
-                .anyRequest().authenticated()
-            )
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/departments/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/departments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/departments/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/doctor/**").hasAnyRole("DOCTOR", "ADMIN")
+                        .requestMatchers("/api/lab/**").hasAnyRole("LAB", "ADMIN")
+                        .requestMatchers("/api/files/**").authenticated()
+                        .requestMatchers("/api/patient/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN", "LAB")
+                        .requestMatchers(HttpMethod.GET, "/api/appointments/today").hasRole("ADMIN")
+                        .requestMatchers("/api/appointments/**").authenticated()
+                        .requestMatchers("/api/prescriptions/**").authenticated()
+                        .requestMatchers("/api/notifications/**").authenticated()
+                        .anyRequest().authenticated())
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -77,7 +76,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        String frontendUrl = System.getenv("FRONTEND_URL");
+
+        config.setAllowedOrigins(
+                frontendUrl != null && !frontendUrl.isBlank()
+                        ? List.of("http://localhost:5173", frontendUrl)
+                        : List.of("http://localhost:5173"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

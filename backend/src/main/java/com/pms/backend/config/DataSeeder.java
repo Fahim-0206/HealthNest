@@ -22,10 +22,15 @@ public class DataSeeder implements CommandLineRunner {
     @Value("${ADMIN_PASSWORD}")
     private String adminPassword;
 
+    @Value("${ADMIN_PASSWORD_UPDATE:false}")
+    private boolean adminPasswordUpdate;
+
     @Override
     public void run(String... args) {
 
-        if (!userRepository.existsByEmail(adminEmail)) {
+        var existingAdmin = userRepository.findByEmail(adminEmail);
+
+        if (existingAdmin.isEmpty()) {
 
             User admin = new User();
             admin.setFullName("System Admin");
@@ -38,6 +43,14 @@ public class DataSeeder implements CommandLineRunner {
             userRepository.save(admin);
 
             System.out.println("Default admin account created successfully.");
+
+        } else if (adminPasswordUpdate) {
+
+            User admin = existingAdmin.get();
+            admin.setPassword(passwordEncoder.encode(adminPassword));
+            userRepository.save(admin);
+
+            System.out.println("Admin password updated successfully.");
         }
     }
 }

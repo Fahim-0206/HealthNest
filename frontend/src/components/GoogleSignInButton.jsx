@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 
-const GOOGLE_CLIENT_ID = "752942695418-uut9k2nslnomgau8gfgb5b26ud1ir2fv.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export default function GoogleSignInButton() {
   const ref = useRef(null);
